@@ -1,6 +1,6 @@
 ## Hello World app
 
-![Scrsht](/screenshot.jpg)
+![Scrsht](/Screenshot.png)
 
 
 #### Java
