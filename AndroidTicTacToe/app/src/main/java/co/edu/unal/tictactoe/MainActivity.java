@@ -23,7 +23,7 @@ public class MainActivity extends AppCompatActivity {
     private TicTacToeGame mGame;
     private boolean mGameOver;
     private int humWon;
-    private int nadWon;
+    private int andWon;
     private int tiesM;
 
     @Override
@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });*/
 
-        //game
+        //gameButtons
         mBoardButtons = new Button[TicTacToeGame.BOARD_SIZE];
         mBoardButtons[0] = (Button) findViewById(R.id.one);
         mBoardButtons[1] = (Button) findViewById(R.id.two);
@@ -54,11 +54,16 @@ public class MainActivity extends AppCompatActivity {
         mBoardButtons[7] = (Button) findViewById(R.id.eight);
         mBoardButtons[8] = (Button) findViewById(R.id.nine);
 
-        mInfoTextView = (TextView) findViewById(R.id.information);
+        mInfoTextView = new TextView[2];
+        mInfoTextView[0] = (TextView) findViewById(R.id.information);
+        mInfoTextView[1] = (TextView) findViewById(R.id.score);
 
         mGame = new TicTacToeGame();
 
         startNewGame();
+        humWon = 0;
+        andWon = 0;
+        tiesM = 0;
 
     }
 
@@ -94,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
     private Button mBoardButtons[];
 
     // Various text displayed
-    private TextView mInfoTextView;
+    private TextView[] mInfoTextView;
 
     //game logic
     private void startNewGame() {
@@ -106,8 +111,14 @@ public class MainActivity extends AppCompatActivity {
             mBoardButtons[i].setEnabled(true);
             mBoardButtons[i].setOnClickListener(new ButtonClickListener(i));
         }
-        // Human goes first
-        mInfoTextView.setText("You go first.");
+        // Alternate who goes first
+        if((humWon+andWon+tiesM)%2==0)
+        mInfoTextView[0].setText("You go first.");
+        else{
+            mInfoTextView[0].setText("Android goes first.");
+            int move = mGame.getComputerMove();
+            setMove(TicTacToeGame.COMPUTER_PLAYER, move);
+        }
     }
     // Handles clicks on the game board buttons
     private class ButtonClickListener implements View.OnClickListener {
@@ -124,25 +135,31 @@ public class MainActivity extends AppCompatActivity {
                 // If no winner yet, let the computer make a move
                 int winner = mGame.checkForWinner();
                 if (winner == 0) {
-                    mInfoTextView.setText("It's Android's turn.");
+                    mInfoTextView[0].setText("It's Android's turn.");
                     int move = mGame.getComputerMove();
                     setMove(TicTacToeGame.COMPUTER_PLAYER, move);
                     winner = mGame.checkForWinner();
                 }
 
                 if (winner == 0)
-                    mInfoTextView.setText("It's your turn.");
+                    mInfoTextView[0].setText("It's your turn.");
                 else if (winner == 1) {
-                    mInfoTextView.setText("It's a tie!");
+                    mInfoTextView[0].setText("It's a tie!");
                     mGameOver = true;
+                    tiesM ++;
+                    mInfoTextView[1].setText("Human: " + humWon + " Ties:" + tiesM + " Android:" + andWon);
                 }
                 else if (winner == 2) {
-                    mInfoTextView.setText("You won!");
+                    mInfoTextView[0].setText("You won!");
                     mGameOver = true;
+                    humWon++;
+                    mInfoTextView[1].setText("Human: " + humWon + " Ties:" + tiesM + " Android:" + andWon);
                 }
                 else {
-                    mInfoTextView.setText("Android won!");
+                    mInfoTextView[0].setText("Android won!");
                     mGameOver = true;
+                    andWon++;
+                    mInfoTextView[1].setText("Human: " + humWon + " Ties:" + tiesM + " Android:" + andWon);
                 }
             }
         }

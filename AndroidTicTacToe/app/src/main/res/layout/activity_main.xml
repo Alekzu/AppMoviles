@@ -76,6 +76,10 @@
             android:layout_height="wrap_content"    			android:text="info"
             android:gravity="center_horizontal" 		      android:layout_marginTop="20dp"
             android:textSize="20dp" />
+        <TextView android:id="@+id/score"    	           	android:layout_width="fill_parent"
+            android:layout_height="wrap_content"    			android:text="Human: 0  Ties: 0 Android: 0"
+            android:gravity="center_horizontal" 		      android:layout_marginTop="40dp"
+            android:textSize="20dp" />
 
     </LinearLayout>
 
