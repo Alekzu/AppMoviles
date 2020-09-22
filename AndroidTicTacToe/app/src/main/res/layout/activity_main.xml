@@ -24,7 +24,7 @@
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:orientation="vertical"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_height="wrap_content"
         android:gravity="center_horizontal" >
 
         <TableLayout
@@ -76,10 +76,28 @@
             android:layout_height="wrap_content"    			android:text="info"
             android:gravity="center_horizontal" 		      android:layout_marginTop="20dp"
             android:textSize="20dp" />
-        <TextView android:id="@+id/score"    	           	android:layout_width="fill_parent"
-            android:layout_height="wrap_content"    			android:text="Human: 0  Ties: 0 Android: 0"
-            android:gravity="center_horizontal" 		      android:layout_marginTop="40dp"
-            android:textSize="20dp" />
+
+        //scores
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView android:id="@+id/scoreH"    	           	android:layout_width="wrap_content"
+                android:layout_height="wrap_content"    		android:text=" Human: 0 "
+                android:layout_toLeftOf="@+id/scoreT"                          android:layout_marginTop="10dp"
+                android:textSize="20dp" />
+
+
+            <TextView android:id="@+id/scoreT"    	           	android:layout_width="wrap_content"
+                android:layout_height="wrap_content"    			android:text=" Ties: 0 "
+                android:layout_centerHorizontal="true" 		      android:layout_marginTop="10dp"
+                android:textSize="20dp"                         android:layout_weight="33"/>
+
+
+            <TextView android:id="@+id/scoreA"    	           	android:layout_width="wrap_content"
+                android:layout_height="wrap_content"    			android:text=" Android: 0 "
+                android:layout_toRightOf="@+id/scoreT" 		      android:layout_marginTop="10dp"
+                android:textSize="20dp"                         />
+        </RelativeLayout>
 
     </LinearLayout>
 

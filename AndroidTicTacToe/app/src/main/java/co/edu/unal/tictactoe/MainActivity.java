@@ -1,5 +1,9 @@
 package co.edu.unal.tictactoe;
 
+import android.annotation.SuppressLint;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.Bundle;
 
@@ -7,14 +11,18 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.menu.MenuBuilder;
 import androidx.appcompat.widget.Toolbar;
 
+import android.view.MenuInflater;
 import android.view.View;
 
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import co.edu.unal.tictactoe.TicTacToeGame.*;
 
 public class MainActivity extends AppCompatActivity {
@@ -25,6 +33,10 @@ public class MainActivity extends AppCompatActivity {
     private int humWon;
     private int andWon;
     private int tiesM;
+
+    static final int DIALOG_DIFFICULTY_ID = 0;
+    static final int DIALOG_QUIT_ID = 1;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,9 +66,11 @@ public class MainActivity extends AppCompatActivity {
         mBoardButtons[7] = (Button) findViewById(R.id.eight);
         mBoardButtons[8] = (Button) findViewById(R.id.nine);
 
-        mInfoTextView = new TextView[2];
+        mInfoTextView = new TextView[4];
         mInfoTextView[0] = (TextView) findViewById(R.id.information);
-        mInfoTextView[1] = (TextView) findViewById(R.id.score);
+        mInfoTextView[1] = (TextView) findViewById(R.id.scoreH);
+        mInfoTextView[2] = (TextView) findViewById(R.id.scoreT);
+        mInfoTextView[3] = (TextView) findViewById(R.id.scoreA);
 
         mGame = new TicTacToeGame();
 
@@ -68,19 +82,32 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    @SuppressLint("RestrictedApi") //added to show icon
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         //getMenuInflater().inflate(R.menu.menu_main, menu); over
         super.onCreateOptionsMenu(menu);
-        menu.add("New Game");
+        //menu.add("New Game");
+        //added
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_main, menu);
+        //end
+        //show icons
+        if(menu instanceof MenuBuilder){
+            MenuBuilder m = (MenuBuilder) menu;
+            m.setOptionalIconsVisible(true);
+        }
+        //show icons
+
 
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        /*old
         startNewGame();
-        return true;
+        return true;*/
 
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
@@ -93,7 +120,80 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);*/
+        //added with menu
+        switch (item.getItemId()) {
+            case R.id.new_game:
+                startNewGame();
+                return true;
+            case R.id.ai_difficulty:
+                showDialog(DIALOG_DIFFICULTY_ID);
+                return true;
+            case R.id.quit:
+                showDialog(DIALOG_QUIT_ID);
+                return true;
+        }
+        return false;
+
     }
+
+    @Override
+    protected Dialog onCreateDialog(int id) {
+        Dialog dialog = null;
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        switch(id) {
+            case DIALOG_DIFFICULTY_ID:
+
+                builder.setTitle(R.string.difficulty_choose);
+
+                final CharSequence[] levels = {
+                        getResources().getString(R.string.difficulty_easy),
+                        getResources().getString(R.string.difficulty_harder),
+                        getResources().getString(R.string.difficulty_expert)};
+
+                // TODO: Set selected, an integer (0 to n-1), for the Difficulty dialog.
+                // selected is the radio button that should be selected.
+                int selected = 2;
+
+                builder.setSingleChoiceItems(levels, selected,
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int item) {
+                                dialog.dismiss();   // Close dialog
+
+                                // TODO: Set the diff level of mGame based on which item was selected.
+                                if(item == 0) mGame.setDifficultyLevel(DifficultyLevel.Easy);
+                                if(item == 1) mGame.setDifficultyLevel(DifficultyLevel.Harder);
+                                if(item == 2) mGame.setDifficultyLevel(DifficultyLevel.Expert);
+
+
+                                // Display the selected difficulty level
+                                Toast.makeText(getApplicationContext(), levels[item],
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                dialog = builder.create();
+
+                break;
+            case DIALOG_QUIT_ID:
+                // Create the quit confirmation dialog
+
+                builder.setMessage(R.string.quit_question)
+                        .setCancelable(false)
+                        .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                MainActivity.this.finish();
+                            }
+                        })
+                        .setNegativeButton(R.string.no, null);
+                dialog = builder.create();
+
+                break;
+
+        }
+
+        return dialog;
+    }
+
 
     // Buttons making up the board
     private Button mBoardButtons[];
@@ -145,21 +245,21 @@ public class MainActivity extends AppCompatActivity {
                     mInfoTextView[0].setText("It's your turn.");
                 else if (winner == 1) {
                     mInfoTextView[0].setText("It's a tie!");
-                    mGameOver = true;
                     tiesM ++;
-                    mInfoTextView[1].setText("Human: " + humWon + " Ties:" + tiesM + " Android:" + andWon);
+                    mInfoTextView[2].setText("  Ties:" + tiesM + "  ");
+                    mGameOver = true;
                 }
                 else if (winner == 2) {
                     mInfoTextView[0].setText("You won!");
-                    mGameOver = true;
                     humWon++;
-                    mInfoTextView[1].setText("Human: " + humWon + " Ties:" + tiesM + " Android:" + andWon);
+                    mInfoTextView[1].setText("Human:" + humWon);
+                    mGameOver = true;
                 }
                 else {
                     mInfoTextView[0].setText("Android won!");
-                    mGameOver = true;
                     andWon++;
-                    mInfoTextView[1].setText("Human: " + humWon + " Ties:" + tiesM + " Android:" + andWon);
+                    mInfoTextView[3].setText("Android:" + andWon);
+                    mGameOver = true;
                 }
             }
         }
