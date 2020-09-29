@@ -19,14 +19,21 @@
             app:popupTheme="@style/AppTheme.PopupOverlay" />
 
     </com.google.android.material.appbar.AppBarLayout>
-
+<!-- -->
     <include layout="@layout/content_main" />
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <LinearLayout
         android:orientation="vertical"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal" >
 
+        <co.edu.unal.tictactoe.BoardView
+            android:id="@+id/board"
+            android:layout_width="300dp"
+            android:layout_height="300dp"
+            android:layout_marginTop="110dp" />
+
+        <!-- old table layout
         <TableLayout
             android:id="@+id/play_grid"		 			android:layout_width="fill_parent"
             android:layout_height="wrap_content"      	android:layout_marginTop="250dp" >
@@ -71,32 +78,35 @@
                     android:textSize="70dp" />
             </TableRow>
         </TableLayout>
+        -->
 
         <TextView android:id="@+id/information"    	           	android:layout_width="fill_parent"
-            android:layout_height="wrap_content"    			android:text="info"
+            android:layout_height="wrap_content"    			android:text="@string/info"
             android:gravity="center_horizontal" 		      android:layout_marginTop="20dp"
-            android:textSize="20dp" />
+            android:textSize="20sp" />
 
-        //scores
+        <!--//scores-->
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
             <TextView android:id="@+id/scoreH"    	           	android:layout_width="wrap_content"
-                android:layout_height="wrap_content"    		android:text=" Human: 0 "
+                android:layout_height="wrap_content"    		android:text="@string/human_score"
                 android:layout_toLeftOf="@+id/scoreT"                          android:layout_marginTop="10dp"
-                android:textSize="20dp" />
+                android:textSize="20sp"
+                android:layout_toStartOf="@+id/scoreT" />
 
 
             <TextView android:id="@+id/scoreT"    	           	android:layout_width="wrap_content"
-                android:layout_height="wrap_content"    			android:text=" Ties: 0 "
+                android:layout_height="wrap_content"    			android:text="@string/ties_score"
                 android:layout_centerHorizontal="true" 		      android:layout_marginTop="10dp"
-                android:textSize="20dp"                         android:layout_weight="33"/>
+                android:textSize="20sp"                         />
 
 
             <TextView android:id="@+id/scoreA"    	           	android:layout_width="wrap_content"
-                android:layout_height="wrap_content"    			android:text=" Android: 0 "
+                android:layout_height="wrap_content"    			android:text="@string/android_score"
                 android:layout_toRightOf="@+id/scoreT" 		      android:layout_marginTop="10dp"
-                android:textSize="20dp"                         />
+                android:textSize="20sp"
+                android:layout_toEndOf="@+id/scoreT" />
         </RelativeLayout>
 
     </LinearLayout>

@@ -4,7 +4,7 @@
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>
     <string name="second_fragment_label">Second Fragment</string>
-    <string name="next">Next</string>
+    <string name="next">   </string>
     <string name="previous">Previous</string>
 
     <string name="hello_first_fragment">Hello first fragment</string>
@@ -16,4 +16,8 @@
     <string name="quit_question">Are you sure you want to quit?</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
+    <string name="info">Information</string>
+    <string name="human_score">Human: 0</string>
+    <string name="ties_score"> Ties: 0 </string>
+    <string name="android_score">Android: 0</string>
 </resources>

@@ -11,6 +11,11 @@ public class TicTacToeGame {
     //game board
     private char mBoard[] = {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '};
     public static final int BOARD_SIZE = 9;
+
+    public char getBoardOccupant(int i) {
+        return mBoard[i];
+    }
+
     // The computer's difficulty levels
     public enum DifficultyLevel {Easy, Harder, Expert};
 
@@ -124,7 +129,7 @@ public class TicTacToeGame {
      * @param location - The location (0-8) to place the move
      */
 
-    public void setMove(char player, int location)
+    public boolean setMove(char player, int location)
     {
         // Eclipse throws a NullPointerException with Console.readLine
         // Known bug: https://bugs.eclipse.org/bugs/show_bug.cgi?id=122429
@@ -134,10 +139,12 @@ public class TicTacToeGame {
 
         if(location < 0 || location > BOARD_SIZE ||
                 mBoard[location] == HUMAN_PLAYER || mBoard[location] == COMPUTER_PLAYER){
-            return;
+            return false;
         }
-        else
-        mBoard[location] = player;
+        else{
+            mBoard[location] = player;
+            return true;
+        }
     }
 
     /** Return the best move for the computer to make. You must call setMove()

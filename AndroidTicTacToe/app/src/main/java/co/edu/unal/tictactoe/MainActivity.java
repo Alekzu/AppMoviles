@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.graphics.Color;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -15,6 +16,7 @@ import androidx.appcompat.view.menu.MenuBuilder;
 import androidx.appcompat.widget.Toolbar;
 
 import android.view.MenuInflater;
+import android.view.MotionEvent;
 import android.view.View;
 
 import android.view.Menu;
@@ -29,10 +31,16 @@ public class MainActivity extends AppCompatActivity {
 
     // Represents the internal state of the game
     private TicTacToeGame mGame;
+    private BoardView mBoardView;
+    //classvariables
     private boolean mGameOver;
     private int humWon;
     private int andWon;
     private int tiesM;
+    //sound variables
+    MediaPlayer mHumanMediaPlayer;
+    MediaPlayer mComputerMediaPlayer;
+
 
     static final int DIALOG_DIFFICULTY_ID = 0;
     static final int DIALOG_QUIT_ID = 1;
@@ -45,6 +53,12 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        mGame = new TicTacToeGame();
+        mBoardView = (BoardView) findViewById(R.id.board);
+        mBoardView.setGame(mGame);
+        mBoardView.setOnTouchListener(mTouchListener);
+
+
         /*FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -53,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });*/
-
+/*
         //gameButtons
         mBoardButtons = new Button[TicTacToeGame.BOARD_SIZE];
         mBoardButtons[0] = (Button) findViewById(R.id.one);
@@ -65,14 +79,14 @@ public class MainActivity extends AppCompatActivity {
         mBoardButtons[6] = (Button) findViewById(R.id.seven);
         mBoardButtons[7] = (Button) findViewById(R.id.eight);
         mBoardButtons[8] = (Button) findViewById(R.id.nine);
-
+*/
         mInfoTextView = new TextView[4];
         mInfoTextView[0] = (TextView) findViewById(R.id.information);
         mInfoTextView[1] = (TextView) findViewById(R.id.scoreH);
         mInfoTextView[2] = (TextView) findViewById(R.id.scoreT);
         mInfoTextView[3] = (TextView) findViewById(R.id.scoreA);
 
-        mGame = new TicTacToeGame();
+
 
         startNewGame();
         humWon = 0;
@@ -80,6 +94,22 @@ public class MainActivity extends AppCompatActivity {
         tiesM = 0;
 
     }
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        mHumanMediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.mario_haha);
+        mComputerMediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.yoshi);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        mHumanMediaPlayer.release();
+        mComputerMediaPlayer.release();
+    }
+
 
     @Override
     @SuppressLint("RestrictedApi") //added to show icon
@@ -205,12 +235,14 @@ public class MainActivity extends AppCompatActivity {
     private void startNewGame() {
         mGame.clearBoard();
         mGameOver = false;
+        mBoardView.invalidate();   // Redraw the board
+        /* not needed with graphics
         // Reset all buttons
         for (int i = 0; i < mBoardButtons.length; i++) {
             mBoardButtons[i].setText("");
             mBoardButtons[i].setEnabled(true);
             mBoardButtons[i].setOnClickListener(new ButtonClickListener(i));
-        }
+        }*/
         // Alternate who goes first
         if((humWon+andWon+tiesM)%2==0)
         mInfoTextView[0].setText("You go first.");
@@ -218,19 +250,22 @@ public class MainActivity extends AppCompatActivity {
             mInfoTextView[0].setText("Android goes first.");
             int move = mGame.getComputerMove();
             setMove(TicTacToeGame.COMPUTER_PLAYER, move);
+            mComputerMediaPlayer.start(); //play computer move sound
         }
     }
-    // Handles clicks on the game board buttons
-    private class ButtonClickListener implements View.OnClickListener {
-        int location;
 
-        public ButtonClickListener(int location) {
-            this.location = location;
-        }
 
-        public void onClick(View view) {
-            if (mBoardButtons[location].isEnabled() && !mGameOver) {
-                setMove(TicTacToeGame.HUMAN_PLAYER, location);
+    // Listen for touches on the board
+    private View.OnTouchListener mTouchListener = new View.OnTouchListener() {
+        public boolean onTouch(View v, MotionEvent event) {
+
+            // Determine which cell was touched
+            int col = (int) event.getX() / mBoardView.getBoardCellWidth();
+            int row = (int) event.getY() / mBoardView.getBoardCellHeight();
+            int pos = row * 3 + col;
+
+            if (!mGameOver && setMove(TicTacToeGame.HUMAN_PLAYER, pos))	{
+                mHumanMediaPlayer.start();    // Play the sound effect
 
                 // If no winner yet, let the computer make a move
                 int winner = mGame.checkForWinner();
@@ -238,6 +273,7 @@ public class MainActivity extends AppCompatActivity {
                     mInfoTextView[0].setText("It's Android's turn.");
                     int move = mGame.getComputerMove();
                     setMove(TicTacToeGame.COMPUTER_PLAYER, move);
+                    mComputerMediaPlayer.start(); //play computer move sound
                     winner = mGame.checkForWinner();
                 }
 
@@ -262,8 +298,22 @@ public class MainActivity extends AppCompatActivity {
                     mGameOver = true;
                 }
             }
+
+// So we aren't notified of continued events when finger is moved
+            return false;
         }
+    };
+    private boolean setMove(char player, int location) {
+        if (mGame.setMove(player, location)) {
+            mBoardView.invalidate();   // Redraw the board
+            return true;
+        }
+        return false;
     }
+
+
+
+    /* old
     private void setMove(char player, int location) {
 
         mGame.setMove(player, location);
@@ -273,7 +323,7 @@ public class MainActivity extends AppCompatActivity {
             mBoardButtons[location].setTextColor(Color.rgb(0, 200, 0));
         else
             mBoardButtons[location].setTextColor(Color.rgb(200, 0, 0));
-    }
+    }*/
 
 
 
