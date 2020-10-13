@@ -5,8 +5,8 @@
     <item android:id="@+id/new_game"
         android:title="New Game"
         android:icon="@drawable/new_game" />
-    <item android:id="@+id/ai_difficulty"
-        android:title="Difficulty"
+    <item android:id="@+id/settings"
+        android:title="Settings"
         android:icon="@drawable/difficulty_level"  />
     <item android:id="@+id/quit"
         android:title="Quit"

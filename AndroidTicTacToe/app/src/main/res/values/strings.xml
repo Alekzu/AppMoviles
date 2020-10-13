@@ -20,4 +20,5 @@
     <string name="human_score">Human: 0</string>
     <string name="ties_score"> Ties: 0 </string>
     <string name="android_score">Android: 0</string>
+    <string name="result_human_wins">You Won!</string>
 </resources>
