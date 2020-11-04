@@ -18,9 +18,12 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.menu.MenuBuilder;
 import androidx.appcompat.widget.Toolbar;
@@ -66,6 +69,9 @@ public class MainActivity extends AppCompatActivity {
     DocumentSnapshot gameSnap;
     private String gameDoc = "ONGL8Jh7FaYKXG3Cgq4V";
     private String player1 = "GoOnline";
+    private int playerNum = 0;
+    private boolean playingOnline = false;
+    private boolean playerTurn = false;
 
 
     static final int DIALOG_DIFFICULTY_ID = 0;
@@ -89,10 +95,8 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //goOnline();
-                getGameInfo();
-                player1 = gameOn.getPlayer1();
-                Snackbar.make(view, player1, Snackbar.LENGTH_LONG)
+                resetOnline();
+                Snackbar.make(view, "reset", Snackbar.LENGTH_LONG)
                        .setAction("Action", null).show();
 
             }
@@ -102,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // Code here executes on main thread after user presses button
-                updateGame();
+                joinOnline();
             }
         });
 
@@ -304,15 +308,24 @@ public class MainActivity extends AppCompatActivity {
             mBoardButtons[i].setEnabled(true);
             mBoardButtons[i].setOnClickListener(new ButtonClickListener(i));
         }*/
-        // Alternate who goes first
-        if((humWon+andWon+tiesM)%2==0)
-        mInfoTextView[0].setText("You go first.");
-        else{
-            mInfoTextView[0].setText("Android goes first.");
-            int move = mGame.getComputerMove();
-            setMove(TicTacToeGame.COMPUTER_PLAYER, move);
-            mComputerMediaPlayer.start(); //play computer move sound
+        //if online
+        if(playingOnline){
+            softResetOnline();
+            if(playerNum == 1)mInfoTextView[0].setText("You go first.");
+            else mInfoTextView[0].setText("Rival goes first");
         }
+        else{//if not online
+            // Alternate who goes first
+            if((humWon+andWon+tiesM)%2==0)
+                mInfoTextView[0].setText("You go first.");
+            else{
+                mInfoTextView[0].setText("Android goes first.");
+                int move = mGame.getComputerMove();
+                setMove(TicTacToeGame.COMPUTER_PLAYER, move);
+                mComputerMediaPlayer.start(); //play computer move sound
+            }
+        }
+
     }
 
 
@@ -320,46 +333,85 @@ public class MainActivity extends AppCompatActivity {
     private View.OnTouchListener mTouchListener = new View.OnTouchListener() {
         public boolean onTouch(View v, MotionEvent event) {
 
-            // Determine which cell was touched
-            int col = (int) event.getX() / mBoardView.getBoardCellWidth();
-            int row = (int) event.getY() / mBoardView.getBoardCellHeight();
-            int pos = row * 3 + col;
+            if (!playingOnline){
+                // Determine which cell was touched
+                int col = (int) event.getX() / mBoardView.getBoardCellWidth();
+                int row = (int) event.getY() / mBoardView.getBoardCellHeight();
+                int pos = row * 3 + col;
 
-            if (!mGameOver && setMove(TicTacToeGame.HUMAN_PLAYER, pos))	{
-                gameSounds(TicTacToeGame.HUMAN_PLAYER);    // Play the sound effect
+                if (!mGameOver && setMove(TicTacToeGame.HUMAN_PLAYER, pos)) {
+                    gameSounds(TicTacToeGame.HUMAN_PLAYER);    // Play the sound effect
 
-                // If no winner yet, let the computer make a move
-                int winner = mGame.checkForWinner();
-                if (winner == 0) {
-                    mInfoTextView[0].setText("It's Android's turn.");
-                    int move = mGame.getComputerMove();
-                    setMove(TicTacToeGame.COMPUTER_PLAYER, move);
-                    gameSounds(TicTacToeGame.COMPUTER_PLAYER); //play computer move sound
-                    winner = mGame.checkForWinner();
+                    // If no winner yet, let the computer make a move
+                    int winner = mGame.checkForWinner();
+                    if (winner == 0) {
+                        mInfoTextView[0].setText("It's Android's turn.");
+                        int move = mGame.getComputerMove();
+                        setMove(TicTacToeGame.COMPUTER_PLAYER, move);
+                        gameSounds(TicTacToeGame.COMPUTER_PLAYER); //play computer move sound
+                        winner = mGame.checkForWinner();
+                    }
+
+                    if (winner == 0)
+                        mInfoTextView[0].setText("It's your turn.");
+                    else if (winner == 1) {
+                        mInfoTextView[0].setText("It's a tie!");
+                        tiesM++;
+                        mInfoTextView[2].setText("  Ties:" + tiesM + "  ");
+                        mGameOver = true;
+                    } else if (winner == 2) {
+                        //mInfoTextView[0].setText("You won!");
+                        String defaultMessage = getResources().getString(R.string.result_human_wins);
+                        mInfoTextView[0].setText(mPrefs.getString("victory_message", defaultMessage));
+                        humWon++;
+                        mInfoTextView[1].setText("Human:" + humWon);
+                        mGameOver = true;
+                    } else {
+                        mInfoTextView[0].setText("Android won!");
+                        andWon++;
+                        mInfoTextView[3].setText("Android:" + andWon);
+                        mGameOver = true;
+                    }
+                }
+            }
+            if (playingOnline && playerTurn){
+                int col = (int) event.getX() / mBoardView.getBoardCellWidth();
+                int row = (int) event.getY() / mBoardView.getBoardCellHeight();
+                int pos = row * 3 + col;
+
+                if (!mGameOver && setMove(TicTacToeGame.HUMAN_PLAYER, pos)) {
+                    updateGame(pos);
+                    gameSounds(TicTacToeGame.HUMAN_PLAYER);    // Play the sound effect
+                    playerTurn = false;
+                    realTimeUpdate();
+                    // If no winner yet, let the computer make a move
+                    int winner = mGame.checkForWinner();
+                    if (winner == 0) {
+                        mInfoTextView[0].setText("It's rival's turn.");
+                    }
+                    else if (winner == 1) {
+                        mInfoTextView[0].setText("It's a tie!");
+                        tiesM++;
+                        mInfoTextView[2].setText("  Ties:" + tiesM + "  ");
+                        mGameOver = true;
+                        softResetOnline();
+                    } else if (winner == 2) {
+                        //mInfoTextView[0].setText("You won!");
+                        String defaultMessage = getResources().getString(R.string.result_human_wins);
+                        mInfoTextView[0].setText(mPrefs.getString("victory_message", defaultMessage));
+                        humWon++;
+                        mInfoTextView[1].setText("Human:" + humWon);
+                        mGameOver = true;
+                        softResetOnline();
+                    } else {
+                        mInfoTextView[0].setText("Rival won!");
+                        andWon++;
+                        mInfoTextView[3].setText("Android:" + andWon);
+                        mGameOver = true;
+                        softResetOnline();
+                    }
                 }
 
-                if (winner == 0)
-                    mInfoTextView[0].setText("It's your turn.");
-                else if (winner == 1) {
-                    mInfoTextView[0].setText("It's a tie!");
-                    tiesM ++;
-                    mInfoTextView[2].setText("  Ties:" + tiesM + "  ");
-                    mGameOver = true;
-                }
-                else if (winner == 2) {
-                    //mInfoTextView[0].setText("You won!");
-                    String defaultMessage = getResources().getString(R.string.result_human_wins);
-                    mInfoTextView[0].setText(mPrefs.getString("victory_message", defaultMessage));
-                    humWon++;
-                    mInfoTextView[1].setText("Human:" + humWon);
-                    mGameOver = true;
-                }
-                else {
-                    mInfoTextView[0].setText("Android won!");
-                    andWon++;
-                    mInfoTextView[3].setText("Android:" + andWon);
-                    mGameOver = true;
-                }
             }
 
 // So we aren't notified of continued events when finger is moved
@@ -381,7 +433,7 @@ public class MainActivity extends AppCompatActivity {
         }
         return;
     }
-    private void goOnline(){
+    private void createGame(){
         //Timestamp timestamp = snapshot.getTimestamp("created_at");
         //java.util.Date date = timestamp.toDate();
         //db.collection("gameList").add(gameOn);
@@ -403,40 +455,122 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
     }
-
-    private void getGameInfo(){
-        gameRef = db.collection("gameList").document("ONGL8Jh7FaYKXG3Cgq4V");
-        /*//gameOn = gameRef.get().getResult().toObject(GameStat.class);
-        gameRef.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-            @Override
-            public void onSuccess(DocumentSnapshot document) {
-                gameOn = document.toObject(GameStat.class);
-                if (document.exists()) {
-                    gameSnap = document;
-                    Log.d(TAG, "DocumentSnapshot data: " + gameOn.getPlayer1());
-                } else {
-                    Log.d(TAG, "No such document");
-                }
-            }
-        });*/
-        //as object
+    //register player as player 1 if no players, or player2 if already a player and sets game to full
+    //starts listener
+    private void joinOnline() {
+        gameRef = db.collection("gameList").document(gameDoc);
         gameRef.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
             public void onSuccess(DocumentSnapshot documentSnapshot) {
-                 gameOn = documentSnapshot.toObject(GameStat.class);
-                 setMove('X',gameOn.move);
+                gameOn = documentSnapshot.toObject(GameStat.class);
+                playingOnline = true;
+                if (gameOn.player1 == null || gameOn.player1 == "") {
+                    playerNum = 1;
+                    playerTurn = true;
+                    db.collection("gameList").document(gameDoc)
+                            .update(
+                                    "player1", "jugador1"
+                            );
+
+                } else {
+                    playerNum = 2;
+                    playerTurn = false;
+                    db.collection("gameList").document(gameDoc)
+                            .update(
+                                    "player2", "jugador2",
+                                    "full", true
+                            );
+                    mInfoTextView[0].setText("It's rival's turn.");
+                }
             }
         });
-
-        //player1 = gameOn.getPlayer1();
-
+        realTimeUpdate();
     }
-    private void updateGame(){
+    private void realTimeUpdate(){
+        gameRef = db.collection("gameList").document(gameDoc);
+        gameRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
+            @Override
+            public void onEvent(@Nullable DocumentSnapshot snapshot,
+                                @Nullable FirebaseFirestoreException e) {
+                if (e != null) {
+                    Log.w(TAG, "Listen failed.", e);
+                    return;
+                }
+                //if update is from rival, set rival move to board
+                if (snapshot != null && snapshot.exists()) {
+                    Log.d(TAG, "Current data: " + snapshot.getData());
+                    gameOn = snapshot.toObject(GameStat.class);
+                    if((playerNum != gameOn.nextTurn) && gameOn.full && !playerTurn && (gameOn.nextTurn != -1)){
+                        setMove(TicTacToeGame.COMPUTER_PLAYER, gameOn.move);
+                        gameSounds(TicTacToeGame.COMPUTER_PLAYER); //play computer move sound
+                        playerTurn = true;
+                        //check winner
+                        int winner = mGame.checkForWinner();
+                        if (winner == 0) {
+                            mInfoTextView[0].setText("It's your turn.");
+                        }
+                        else if (winner == 1) {
+                            mInfoTextView[0].setText("It's a tie!");
+                            tiesM++;
+                            mInfoTextView[2].setText("  Ties:" + tiesM + "  ");
+                            mGameOver = true;
+                            softResetOnline();
+                        } else if (winner == 2) {
+                            //mInfoTextView[0].setText("You won!");
+                            String defaultMessage = getResources().getString(R.string.result_human_wins);
+                            mInfoTextView[0].setText(mPrefs.getString("victory_message", defaultMessage));
+                            humWon++;
+                            mInfoTextView[1].setText("Human:" + humWon);
+                            mGameOver = true;
+                            softResetOnline();
+                        } else {
+                            mInfoTextView[0].setText("Rival won!");
+                            andWon++;
+                            mInfoTextView[3].setText("Android:" + andWon);
+                            mGameOver = true;
+                            softResetOnline();
+                        }
+                    }
+                } else {
+                    Log.d(TAG, "Current data: null");
+                }
+            }
+        });
+    }
+
+
+
+    private void updateGame(int move){
+
         db.collection("gameList").document(gameDoc)
                 .update(
-                        "move", 8
+                        "move", move,
+                        "nextTurn",playerNum
                 );
 
+    }
+
+    private void resetOnline(){
+        if(playerNum == 2){
+            playerTurn = false;
+
+        }
+        db.collection("gameList").document(gameDoc)
+                .update(
+                        "move", 0,
+                        "nextTurn", -1,
+                        "full", false,
+                        "player1", null,
+                        "player2", null
+
+                );
+    }
+    private void softResetOnline(){
+        db.collection("gameList").document(gameDoc)
+                .update(
+                        "move", 0,
+                        "nextTurn", -1
+                );
     }
 
 
