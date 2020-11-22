@@ -102,8 +102,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        final Button button = findViewById(R.id.onlineButton);
-        button.setOnClickListener(new View.OnClickListener() {
+        final Button onlineButton = findViewById(R.id.onlineButton);
+        onlineButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // Code here executes on main thread after user presses button
                 joinOnline();
@@ -332,7 +332,7 @@ public class MainActivity extends AppCompatActivity {
     // Listen for touches on the board
     private View.OnTouchListener mTouchListener = new View.OnTouchListener() {
         public boolean onTouch(View v, MotionEvent event) {
-
+            //check if playing online or versus computer
             if (!playingOnline){
                 // Determine which cell was touched
                 int col = (int) event.getX() / mBoardView.getBoardCellWidth();
@@ -458,12 +458,14 @@ public class MainActivity extends AppCompatActivity {
     //register player as player 1 if no players, or player2 if already a player and sets game to full
     //starts listener
     private void joinOnline() {
+        final Button onlineButton = findViewById(R.id.onlineButton);
         gameRef = db.collection("gameList").document(gameDoc);
         gameRef.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
             public void onSuccess(DocumentSnapshot documentSnapshot) {
                 gameOn = documentSnapshot.toObject(GameStat.class);
                 playingOnline = true;
+                onlineButton.setEnabled(false);
                 if (gameOn.player1 == null || gameOn.player1 == "") {
                     playerNum = 1;
                     playerTurn = true;
@@ -551,10 +553,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void resetOnline(){
-        if(playerNum == 2){
-            playerTurn = false;
-
-        }
+        final Button onlineButton = findViewById(R.id.onlineButton);
+        onlineButton.setEnabled(true);
+        playerNum = 0;
+        playingOnline = false;
+        playerTurn = false;
         db.collection("gameList").document(gameDoc)
                 .update(
                         "move", 0,
@@ -564,6 +567,7 @@ public class MainActivity extends AppCompatActivity {
                         "player2", null
 
                 );
+
     }
     private void softResetOnline(){
         db.collection("gameList").document(gameDoc)
@@ -571,7 +575,10 @@ public class MainActivity extends AppCompatActivity {
                         "move", 0,
                         "nextTurn", -1
                 );
+        if(playerNum == 2){
+            playerTurn = false;
+        }
+        else playerTurn = true;
     }
-
 
 }

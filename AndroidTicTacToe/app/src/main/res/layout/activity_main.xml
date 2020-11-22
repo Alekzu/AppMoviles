@@ -65,7 +65,8 @@
             android:id="@+id/onlineButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Button" />
+            android:layout_marginTop="15sp"
+            android:text="Play Online" />
     </LinearLayout>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
