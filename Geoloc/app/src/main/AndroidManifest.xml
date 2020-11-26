@@ -10,14 +10,21 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MainActivity"
-            android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+            android:name="co.edu.unal.geoloc.ui.login.LoginActivity"
+            android:label="@string/title_activity_login"></activity>
+        <activity android:name="co.edu.unal.geoloc.ui.login.HomeMap">
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
+        </activity>
+        <!--<activity android:name=".Home" />-->
+        <activity android:name="co.edu.unal.geoloc.ui.login.Register" />
+        <activity
+            android:name="co.edu.unal.geoloc.MainActivity"
+            android:theme="@style/SplashTheme">
+
         </activity>
     </application>
 

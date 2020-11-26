@@ -1,2 +1,4 @@
+include ':mapbox-android-sdk-9.5.0-sources'
+include ':mapbox-android-sdk-9.5.0'
 include ':app'
 rootProject.name = "Geoloc"
